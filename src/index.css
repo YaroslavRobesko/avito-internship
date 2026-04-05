@@ -1,0 +1,91 @@
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
+
+
+/*
+antd обновление сообщений
+*/
+
+/* global.css - исправленная версия */
+.ant-message {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  left: auto !important;
+  transform: none !important;
+  z-index: 1010;
+}
+
+.ant-message-notice {
+  text-align: right;
+}
+
+.ant-message-notice .ant-message-notice-content {
+  width: 328px;
+  padding: 12px 20px !important;
+  border-radius: 14px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.ant-message-success .ant-message-notice-content,
+.ant-message-notice.ant-message-success .ant-message-notice-content {
+  background-color: #F6FFED !important;
+  border: 1px solid #B7EB8F !important;
+}
+
+.ant-message-error .ant-message-notice-content,
+.ant-message-notice.ant-message-error .ant-message-notice-content {
+  background-color: #FFF1F0 !important;
+  border: 1px solid #FFCCC7 !important;
+}
+
+.ant-message-notice-content span,
+.ant-message-notice-content .ant-message-custom-content {
+  color: #000000 !important;
+}
+
+/* Для иконок внутри сообщений */
+.ant-message-notice-content .anticon {
+  color: inherit !important;
+}
+
+.ant-message-success .anticon {
+  color: #52C41A !important;
+}
+
+.ant-message-error .anticon {
+  color: #FF4D4F !important;
+}

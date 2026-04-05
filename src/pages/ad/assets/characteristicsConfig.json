@@ -1,0 +1,78 @@
+{
+  "categoryNames": {
+    "auto": "Автомобиль",
+    "real_estate": "Недвижимость",
+    "electronics": "Электроника"
+  },
+  "realEstateTypeNames": {
+    "flat": "Квартира",
+    "house": "Дом",
+    "room": "Комната"
+  },
+  "electronicsTypeNames": {
+    "phone": "Телефон",
+    "laptop": "Ноутбук",
+    "misc": "Разное"
+  },
+  "fieldLabels": {
+    "title": "Название",
+    "price": "Цена",
+    "description": "Описание",
+    "brand": "Бренд",
+    "model": "Модель",
+    "yearOfManufacture": "Год выпуска",
+    "transmission": "Коробка передач",
+    "mileage": "Пробег",
+    "enginePower": "Мощность двигателя",
+    "type": "Тип",
+    "address": "Адрес",
+    "area": "Площадь",
+    "floor": "Этаж",
+    "condition": "Состояние",
+    "color": "Цвет"
+  },
+  "formatRules": {
+    "price": {
+      "template": "{{value}} ₽",
+      "useLocale": true
+    },
+    "area": {
+      "template": "{{value}} м²",
+      "useLocale": false
+    },
+    "mileage": {
+      "template": "{{value}} км",
+      "useLocale": true
+    },
+    "enginePower": {
+      "template": "{{value}} л.с.",
+      "useLocale": false
+    },
+    "floor": {
+      "template": "{{value}} этаж",
+      "useLocale": false
+    }
+  },
+  "valueMappings": {
+    "transmission": {
+      "automatic": "Автомат",
+      "manual": "Механика"
+    },
+    "condition": {
+      "new": "Новый",
+      "used": "Б/У"
+    }
+  },
+  "fieldOrder": {
+    "auto": [
+      "brand",
+      "model",
+      "yearOfManufacture",
+      "transmission",
+      "mileage",
+      "enginePower"
+    ],
+    "real_estate": ["type", "address", "area", "floor"],
+    "electronics": ["type", "brand", "model", "condition", "color"]
+  }
+}
