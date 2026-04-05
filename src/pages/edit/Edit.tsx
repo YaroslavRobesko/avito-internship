@@ -86,12 +86,47 @@ const fieldsConfig: Record<
 // Поля, которые считаются обязательными (блокируют сохранение)
 const requiredFields = ["title", "price"];
 
+// Числовые поля для каждой категории
+const numericFieldsByCategory = {
+  auto: ['yearOfManufacture', 'mileage', 'enginePower'],
+  real_estate: ['area', 'floor'],
+  electronics: []
+};
+
 export default function Edit(): React.ReactNode {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [formData, setFormData] = useState<ItemUpdateIn | null>(null);
+
+  // Преобразование числовых полей из строк в числа
+  const convertNumericFields = useCallback((data: ItemUpdateIn): ItemUpdateIn => {
+    const category = data.category;
+    const numericFields = numericFieldsByCategory[category as keyof typeof numericFieldsByCategory] || [];
+    
+    if (numericFields.length === 0) return data;
+    
+    const newData = { ...data };
+    const params = { ...newData.params } as any;
+    let hasChanges = false;
+    
+    numericFields.forEach(field => {
+      if (params[field] !== undefined && params[field] !== null && params[field] !== '') {
+        const numValue = Number(params[field]);
+        if (!isNaN(numValue)) {
+          params[field] = numValue;
+          hasChanges = true;
+        }
+      }
+    });
+    
+    if (hasChanges) {
+      newData.params = params;
+    }
+    
+    return newData;
+  }, []);
 
   // Загрузка данных: сначала из localStorage, потом с бэка
   useEffect(() => {
@@ -103,7 +138,9 @@ export default function Edit(): React.ReactNode {
         const savedDraft = localStorage.getItem(draftKey);
         if (savedDraft) {
           const parsed = JSON.parse(savedDraft);
-          setFormData(parsed);
+          // Конвертируем числовые поля при загрузке из черновика
+          const convertedData = convertNumericFields(parsed);
+          setFormData(convertedData);
           setLoading(false);
           return;
         }
@@ -120,7 +157,7 @@ export default function Edit(): React.ReactNode {
       }
     };
     loadData();
-  }, [id]);
+  }, [id, convertNumericFields]);
 
   // Сохранение любой части формы в localStorage
   const saveToLocalStorage = useCallback(
@@ -146,7 +183,20 @@ export default function Edit(): React.ReactNode {
   const updateParam = useCallback(
     (paramKey: string, value: any) => {
       if (!formData) return;
-      const newParams = { ...formData.params, [paramKey]: value };
+      
+      // Определяем, нужно ли преобразовать в число
+      const category = formData.category;
+      const numericFields = numericFieldsByCategory[category as keyof typeof numericFieldsByCategory] || [];
+      let processedValue = value;
+      
+      if (numericFields.includes(paramKey) && value !== '' && value !== null && value !== undefined) {
+        processedValue = Number(value);
+        if (isNaN(processedValue)) {
+          processedValue = '';
+        }
+      }
+      
+      const newParams = { ...formData.params, [paramKey]: processedValue };
       const newData = { ...formData, params: newParams };
       setFormData(newData);
       saveToLocalStorage(newData);
@@ -212,20 +262,22 @@ export default function Edit(): React.ReactNode {
     if (!formData || !isFormValid) return;
     setLoading(true);
     try {
-      await server.put(`/items/${id}`, formData);
+      // Конвертируем числовые поля перед отправкой на сервер
+      const dataToSend = convertNumericFields(formData);
+      await server.put(`/items/${id}`, dataToSend);
       localStorage.removeItem(`edit_draft_${id}`);
       message.success("Объявление сохранено");
       navigate(`/ads/${id}`);
-    } catch {
+    } catch (error: any) {
+      console.error('Save error:', error);
       message.error(
-        `Ошибка сохранения 
-         При попытке сохранить изменения произошла ошибка. 
-         Попробуйте ещё раз или зайдите позже.`,
+        "Ошибка сохранения. При попытке сохранить изменения произошла ошибка. " +
+        "Попробуйте ещё раз или зайдите позже."
       );
     } finally {
       setLoading(false);
     }
-  }, [formData, id, isFormValid, navigate]);
+  }, [formData, id, isFormValid, navigate, convertNumericFields]);
 
   if (loading && !formData) return <div>Загрузка...</div>;
   if (error) return <div>Ошибка загрузки</div>;
@@ -239,16 +291,32 @@ export default function Edit(): React.ReactNode {
     return value ? {} : { borderColor: "#FFA940" };
   };
 
+  // Проверка, является ли поле числовым
+  const isNumericField = (key: string) => {
+    const numericFields = numericFieldsByCategory[category as keyof typeof numericFieldsByCategory] || [];
+    return numericFields.includes(key);
+  };
+
   // Рендер input с крестиком и оранжевой рамкой (для необязательных полей)
   const renderInputWithClear = (
     key: string,
     value: any,
     placeholder: string,
   ) => {
+    const isNumeric = isNumericField(key);
+    
     return (
       <Input
-        value={value || ""}
-        onChange={(e) => updateParam(key, e.target.value)}
+        type={isNumeric ? "number" : "text"}
+        value={value ?? ""}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (isNumeric && val !== '') {
+            updateParam(key, Number(val));
+          } else {
+            updateParam(key, val);
+          }
+        }}
         placeholder={placeholder}
         style={{
           fontSize: "14px",
@@ -264,7 +332,7 @@ export default function Edit(): React.ReactNode {
               justifyContent: "center",
             }}
           >
-            {value && (
+            {value !== undefined && value !== null && value !== '' && (
               <CloseCircleOutlined
                 onClick={() => updateParam(key, "")}
                 style={{ color: "#bfbfbf", cursor: "pointer" }}
@@ -446,13 +514,11 @@ export default function Edit(): React.ReactNode {
                   justifyContent: "center",
                 }}
               >
-                {title ? (
+                {title && (
                   <CloseCircleOutlined
                     onClick={() => updateField("title", "")}
                     style={{ color: "#bfbfbf", cursor: "pointer" }}
                   />
-                ) : (
-                  ""
                 )}
               </div>
             }
@@ -467,7 +533,6 @@ export default function Edit(): React.ReactNode {
         </div>
 
         {/* Цена (обязательная) */}
-
         <div style={{ padding: "16px 0", borderBottom: "1px solid #F0F0F0" }}>
           <Title
             level={5}
@@ -502,7 +567,7 @@ export default function Edit(): React.ReactNode {
                       justifyContent: "center",
                     }}
                   >
-                    {price ? (
+                    {(price !== undefined && price !== null && price !== 0) ? (
                       <CloseCircleOutlined
                         onClick={() => updateField("price", 0)}
                         style={{ color: "#bfbfbf", cursor: "pointer" }}
